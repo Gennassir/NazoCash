@@ -1,0 +1,6 @@
+{
+  "name": "NazoCash Uganda - Instant Mobile Loans",
+  "description": "Instant mobile money loans in Uganda. Choose your loan package up to UGX 1,450,000, verify eligibility, select 3-12 month terms, and receive funds via MTN & Airtel Money.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
