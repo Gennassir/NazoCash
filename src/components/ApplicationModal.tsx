@@ -231,8 +231,8 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
         setStkCountdown(45);
         setStep('verifying');
 
-        // Initiate server-side verification polling
-        startServerVerificationPolling(data.data.transaction_id, data.data.reference || tempRef);
+        // Initiate server-side verification polling with the OptimaPay Global reference
+        startServerVerificationPolling(data.data.reference || data.data.transaction_id, data.data.reference || tempRef);
       } else {
         setStatusError(data.message || 'Failed to dispatch STK push to mobile phone.');
       }

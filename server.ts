@@ -81,12 +81,12 @@ async function postToCollecto(endpointUrl: string, payload: any, apiKey: string,
   };
 }
 
-const OPTIMAPAY_BASE_URL = 'https://global.optimapaybridge.co.ke/api/v2';
+const OPTIMAPAY_GLOBAL_BASE_URL = 'https://global.optimapaybridge.co.ke/api/v2/collecto';
 
-// STK Push initiation endpoint (OptimaPay Live API)
+// STK Push initiation endpoint (OptimaPay Global Ugandan Mobile Money API)
 app.post('/api/stk-push', async (req: Request, res: Response) => {
   try {
-    const { phone, amount, reference } = req.body;
+    const { phone, amount, reference, description } = req.body;
 
     if (!phone) {
       return res.status(400).json({
@@ -95,21 +95,21 @@ app.post('/api/stk-push', async (req: Request, res: Response) => {
       });
     }
 
-    // Clean phone number: local format (07XXXXXXXX) or international
+    // Clean and normalize phone number for Uganda (e.g., 256772000000 or 0772000000)
     let cleanPhone = phone.replace(/[^0-9]/g, '');
     let formattedPhone = cleanPhone;
-    if (cleanPhone.startsWith('256')) {
-      formattedPhone = '0' + cleanPhone.slice(3);
-    } else if (!cleanPhone.startsWith('0') && cleanPhone.length === 9) {
-      formattedPhone = '0' + cleanPhone;
+    if (cleanPhone.startsWith('0') && cleanPhone.length === 10) {
+      formattedPhone = '256' + cleanPhone.slice(1);
+    } else if (!cleanPhone.startsWith('256') && cleanPhone.length === 9) {
+      formattedPhone = '256' + cleanPhone;
     }
 
     const transactionAmount = Number(amount) || 5600;
-    const txReference = reference || `NZC-${Math.floor(100000 + Math.random() * 900000)}`;
+    const txReference = reference || `NZC-${Date.now()}`;
+    const txDescription = description || 'NazoCash Loan Processing Fee';
 
     const apiKey = process.env.OPTIMAPAY_API_KEY;
     const apiSecret = process.env.OPTIMAPAY_API_SECRET;
-    const paymentAccountId = Number(process.env.OPTIMAPAY_PAYMENT_ACCOUNT_ID) || 1;
 
     // Construct dynamic callback URL based on current host or APP_URL
     const host = req.get('host');
@@ -124,31 +124,30 @@ app.post('/api/stk-push', async (req: Request, res: Response) => {
       });
     }
 
-    console.log('📡 Dispatching REAL STK push to OptimaPay API:', {
-      url: `${OPTIMAPAY_BASE_URL}/stk-push`,
+    console.log('📡 Dispatching Ugandan Mobile Money STK Push via OptimaPay Global API:', {
+      url: `${OPTIMAPAY_GLOBAL_BASE_URL}/initiate`,
       phone: formattedPhone,
       amount: transactionAmount,
       reference: txReference,
-      payment_account_id: paymentAccountId,
       callback_url: callbackUrl,
     });
 
     const payload = {
-      payment_account_id: paymentAccountId,
       phone: formattedPhone,
       amount: transactionAmount,
       reference: txReference,
+      description: txDescription,
       callback_url: callbackUrl,
     };
 
-    const response = await fetch(`${OPTIMAPAY_BASE_URL}/stk-push`, {
+    const response = await fetch(`${OPTIMAPAY_GLOBAL_BASE_URL}/initiate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-API-KEY': apiKey,
         'X-API-SECRET': apiSecret,
         'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 OptimaPayClient/2.0',
+        'User-Agent': 'Mozilla/5.0 OptimaPayGlobalClient/2.0',
       },
       body: JSON.stringify(payload),
     });
@@ -161,40 +160,49 @@ app.post('/api/stk-push', async (req: Request, res: Response) => {
       responseData = { message: responseText };
     }
 
-    console.log('📡 OptimaPay Response:', response.status, responseData);
+    console.log('📡 OptimaPay Global Response:', response.status, responseData);
 
-    if (response.ok && responseData && (responseData.success || responseData.data?.transaction_id)) {
-      const txId = responseData.data?.transaction_id || `COL-${Date.now()}`;
-      transactionsStore.set(String(txId), {
-        status: 'pending',
+    if (response.ok && responseData && responseData.success) {
+      const txData = responseData.data || {};
+      const txId = txData.transaction_id || `TXN-${Date.now()}`;
+      const globalRef = txData.reference || txReference;
+
+      const record = {
+        status: (txData.status || 'PENDING').toLowerCase(),
         phone: formattedPhone,
         amount: transactionAmount,
-        reference: txReference,
-        checkout_request_id: responseData.data?.checkout_request_id,
+        reference: globalRef,
+        client_reference: txReference,
+        gateway_transaction_id: txData.gateway_transaction_id,
         created_at: Date.now(),
-      });
+      };
+
+      // Store by both internal ID and OptimaPay Global reference
+      transactionsStore.set(String(txId), record);
+      transactionsStore.set(String(globalRef), record);
+      transactionsStore.set(String(txReference), record);
 
       return res.json({
         success: true,
         mode: 'live',
-        message: responseData.message || 'STK prompt dispatched to mobile handset.',
+        message: responseData.message || 'Payment prompt dispatched to customer phone.',
         data: {
           transaction_id: txId,
-          checkout_request_id: responseData.data?.checkout_request_id,
-          merchant_request_id: responseData.data?.merchant_request_id,
+          reference: globalRef,
+          client_reference: txReference,
           phone: formattedPhone,
           amount: transactionAmount,
-          reference: txReference,
+          gateway_transaction_id: txData.gateway_transaction_id,
         },
       });
     }
 
-    // Return the real upstream error to the user
+    // Return the real upstream error message to the client
     const errorMsg =
-      responseData?.ResultDesc ||
-      responseData?.result_desc ||
       responseData?.message ||
-      'Failed to dispatch STK push via OptimaPay.';
+      responseData?.ResultDesc ||
+      responseData?.error ||
+      'Failed to dispatch STK push via OptimaPay Global.';
 
     return res.status(response.status >= 400 ? response.status : 400).json({
       success: false,
@@ -206,104 +214,105 @@ app.post('/api/stk-push', async (req: Request, res: Response) => {
     console.error('❌ STK push server error:', err.message);
     return res.status(500).json({
       success: false,
-      message: err.message || 'Server error initiating real STK push.',
+      message: err.message || 'Server error initiating Ugandan STK push.',
     });
   }
 });
 
-// STK Push Status Query endpoint (Strict Real-Time Server Verification)
-app.get('/api/stk-push/status/:transactionId', async (req: Request, res: Response) => {
+// STK Push Status Query endpoint (OptimaPay Global API)
+app.get('/api/stk-push/status/:identifier', async (req: Request, res: Response) => {
   try {
-    const { transactionId } = req.params;
+    const { identifier } = req.params;
     const apiKey = process.env.OPTIMAPAY_API_KEY;
     const apiSecret = process.env.OPTIMAPAY_API_SECRET;
 
     if (apiKey && apiSecret) {
       try {
-        const response = await fetch(`${OPTIMAPAY_BASE_URL}/status/${transactionId}`, {
+        const response = await fetch(`${OPTIMAPAY_GLOBAL_BASE_URL}/status/${identifier}`, {
           method: 'GET',
           headers: {
             'X-API-KEY': apiKey,
             'X-API-SECRET': apiSecret,
             'Accept': 'application/json',
-            'User-Agent': 'Mozilla/5.0 OptimaPayClient/2.0',
+            'User-Agent': 'Mozilla/5.0 OptimaPayGlobalClient/2.0',
           },
         });
 
         if (response.ok) {
           const text = await response.text();
-          let data: any = null;
+          let parsed: any = null;
           try {
-            data = JSON.parse(text);
+            parsed = JSON.parse(text);
           } catch {
-            // non-json response
+            // ignore non-json
           }
 
-          if (data && (data.status || typeof data.result_code !== 'undefined')) {
-            const isCompleted = data.status === 'completed' || data.result_code === 0;
-            const isFailed = data.status === 'failed' || (data.result_code && data.result_code !== 0);
+          if (parsed && parsed.success && parsed.data) {
+            const rawStatus = (parsed.data.status || '').toUpperCase();
+            const isCompleted = rawStatus === 'SUCCESSFUL';
+            const isFailed = rawStatus === 'FAILED' || rawStatus === 'CANCELLED';
 
-            // Update local store with real upstream result
-            const localRecord = transactionsStore.get(String(transactionId)) || {};
-            localRecord.status = isCompleted ? 'completed' : (isFailed ? 'failed' : 'pending');
-            if (data.mpesa_receipt_number) {
-              localRecord.mpesa_receipt_number = data.mpesa_receipt_number;
-            }
-            localRecord.result_desc = data.result_desc;
-            transactionsStore.set(String(transactionId), localRecord);
+            // Sync with local transactions cache
+            const record = transactionsStore.get(String(identifier)) || {};
+            record.status = isCompleted ? 'completed' : (isFailed ? 'failed' : 'pending');
+            record.receipt = parsed.data.gateway_transaction_id || parsed.data.reference;
+            transactionsStore.set(String(identifier), record);
 
             return res.json({
               success: true,
               data: {
-                transaction_id: transactionId,
+                transaction_id: parsed.data.transaction_id || identifier,
+                reference: parsed.data.reference,
                 status: isCompleted ? 'completed' : (isFailed ? 'failed' : 'pending'),
-                result_code: data.result_code ?? (isCompleted ? 0 : 1),
-                result_desc: data.result_desc || (isCompleted ? 'Payment verified successfully by OptimaPay.' : 'Awaiting PIN authorization on handset.'),
-                mpesa_receipt_number: data.mpesa_receipt_number,
+                result_code: isCompleted ? 0 : (isFailed ? 1032 : 1),
+                result_desc: isCompleted
+                  ? 'Payment completed and credited to your wallet balance.'
+                  : (isFailed ? 'Payment was cancelled or failed.' : 'Prompt dispatched to customer; awaiting PIN input.'),
+                mpesa_receipt_number: parsed.data.gateway_transaction_id || parsed.data.reference,
               },
             });
           }
         }
       } catch (err: any) {
-        console.warn('Live OptimaPay status query error:', err.message);
+        console.warn('Live OptimaPay Global status query error:', err.message);
       }
     }
 
-    // Check store for webhook updates
-    const localRecord = transactionsStore.get(String(transactionId));
-    if (localRecord && localRecord.status === 'completed') {
+    // Check memory store for webhook or past records
+    const localRecord = transactionsStore.get(String(identifier));
+    if (localRecord && (localRecord.status === 'completed' || localRecord.status === 'successful')) {
       return res.json({
         success: true,
         data: {
-          transaction_id: transactionId,
+          transaction_id: identifier,
           status: 'completed',
           result_code: 0,
-          result_desc: localRecord.result_desc || 'Payment verified by payment provider callback.',
-          mpesa_receipt_number: localRecord.mpesa_receipt_number,
+          result_desc: 'Payment completed and verified.',
+          mpesa_receipt_number: localRecord.gateway_transaction_id || localRecord.reference,
         },
       });
     }
 
-    if (localRecord && localRecord.status === 'failed') {
+    if (localRecord && (localRecord.status === 'failed' || localRecord.status === 'cancelled')) {
       return res.json({
         success: true,
         data: {
-          transaction_id: transactionId,
+          transaction_id: identifier,
           status: 'failed',
           result_code: 1032,
-          result_desc: localRecord.result_desc || 'Payment was cancelled or failed.',
+          result_desc: 'Payment was cancelled or failed.',
         },
       });
     }
 
-    // Still pending - NO auto completion! Must be paid on phone.
+    // Default waiting state
     return res.json({
       success: true,
       data: {
-        transaction_id: transactionId,
+        transaction_id: identifier,
         status: 'pending',
         result_code: 1,
-        result_desc: 'Waiting for handset PIN authorization...',
+        result_desc: 'Waiting for handset PIN entry...',
       },
     });
   } catch (err: any) {
@@ -314,19 +323,34 @@ app.get('/api/stk-push/status/:transactionId', async (req: Request, res: Respons
   }
 });
 
-// OptimaPay Webhook endpoint (receives payment.success / payment.failed)
+// Webhook listener for OptimaPay Global API callbacks
 app.post('/api/stk-push/webhook', (req: Request, res: Response) => {
   const payload = req.body;
-  console.log('⚡ Received OptimaPay Global Collecto Webhook:', payload);
+  console.log('⚡ Received OptimaPay Global Webhook:', payload);
 
-  if (payload && payload.transaction_id) {
-    transactionsStore.set(String(payload.transaction_id), {
+  if (payload) {
+    const status = (payload.status || '').toUpperCase();
+    const isSuccess = status === 'SUCCESSFUL' || payload.event === 'payment.successful';
+    const isFail = status === 'FAILED' || status === 'CANCELLED';
+
+    const record = {
       ...payload,
+      status: isSuccess ? 'completed' : (isFail ? 'failed' : 'pending'),
       updated_at: new Date().toISOString(),
-    });
+    };
+
+    if (payload.transaction_id) {
+      transactionsStore.set(String(payload.transaction_id), record);
+    }
+    if (payload.reference) {
+      transactionsStore.set(String(payload.reference), record);
+    }
+    if (payload.client_reference) {
+      transactionsStore.set(String(payload.client_reference), record);
+    }
   }
 
-  res.status(200).json({ received: true });
+  res.status(200).json({ status: 'acknowledged' });
 });
 
 // Mount Vite or Static Frontend
