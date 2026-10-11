@@ -50,9 +50,8 @@ export default function App() {
   };
 
   const handleHeroApply = () => {
-    // Open default popular package (UGX 650,000)
-    const defaultPkg = LOAN_PACKAGES[0];
-    handleSelectPackage(defaultPkg);
+    setIsMyLoansOpen(false);
+    handleScrollToPackages();
   };
 
   const handleScrollToPackages = () => {
@@ -120,7 +119,7 @@ export default function App() {
                   Need a custom loan amount?
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-md">
-                  Use our interactive calculator to simulate any amount from UGX 100,000 to UGX 1,500,000 with flexible 3 to 12 months repayment.
+                  Use our interactive calculator to simulate any amount from UGX 650,000 to UGX 5,000,000 with flexible 3 to 12 months repayment.
                 </p>
               </div>
               <button

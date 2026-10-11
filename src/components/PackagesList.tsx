@@ -19,7 +19,7 @@ export const PackagesList: React.FC<PackagesListProps> = ({ packages, onSelectPa
   });
 
   return (
-    <section className="max-w-4xl mx-auto px-4 py-8" id="packages">
+    <section className="max-w-4xl mx-auto px-4 py-8 scroll-mt-20" id="packages">
       {/* Section Head */}
       <div className="text-center mb-6">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0e1f3f] tracking-tight">

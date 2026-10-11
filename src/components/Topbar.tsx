@@ -85,7 +85,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             onClick={onScrollToPackages}
             className="bg-[#0a2540] text-white hover:bg-[#07192c] font-semibold px-5 py-1.5 rounded-full text-xs transition-all duration-200 shadow-xs"
           >
-            View Plans
+            Apply Now
           </button>
         </div>
 
