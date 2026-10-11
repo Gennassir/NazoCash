@@ -1,34 +1,102 @@
 import { LoanPackage, RepaymentMonth, RepaymentPlan } from '../types';
 
-export const FIXED_FEE_UGX = 5600;
-export const KSH_TO_UGX = 29;
+export const FIXED_FEE_UGX = 9371;
+export const MIN_LOAN_UGX = 650000;
+export const MAX_LOAN_UGX = 5000000;
 
-// The exact 12 packages from https://nazocashug.edgeone.dev
-export const PACKAGES_RAW = [
-  { kshLimit: 5000, popular: true },
-  { kshLimit: 7500, popular: false },
-  { kshLimit: 10000, popular: true },
-  { kshLimit: 12500, popular: false },
-  { kshLimit: 16000, popular: false },
-  { kshLimit: 20000, popular: true },
-  { kshLimit: 24500, popular: false },
-  { kshLimit: 29500, popular: false },
-  { kshLimit: 33000, popular: false },
-  { kshLimit: 38500, popular: true },
-  { kshLimit: 43000, popular: false },
-  { kshLimit: 50000, popular: true },
+// The 12 official packages scaling from UGX 650,000 to UGX 5,000,000
+export const LOAN_PACKAGES: LoanPackage[] = [
+  {
+    id: 'pkg-1',
+    limitUgx: 650000,
+    limitDisplay: '650,000',
+    feeUgx: 9371,
+    popular: true,
+  },
+  {
+    id: 'pkg-2',
+    limitUgx: 850000,
+    limitDisplay: '850,000',
+    feeUgx: 12250,
+    popular: false,
+  },
+  {
+    id: 'pkg-3',
+    limitUgx: 1100000,
+    limitDisplay: '1,100,000',
+    feeUgx: 15850,
+    popular: true,
+  },
+  {
+    id: 'pkg-4',
+    limitUgx: 1400000,
+    limitDisplay: '1,400,000',
+    feeUgx: 20180,
+    popular: false,
+  },
+  {
+    id: 'pkg-5',
+    limitUgx: 1750000,
+    limitDisplay: '1,750,000',
+    feeUgx: 25220,
+    popular: false,
+  },
+  {
+    id: 'pkg-6',
+    limitUgx: 2150000,
+    limitDisplay: '2,150,000',
+    feeUgx: 30990,
+    popular: true,
+  },
+  {
+    id: 'pkg-7',
+    limitUgx: 2600000,
+    limitDisplay: '2,600,000',
+    feeUgx: 37480,
+    popular: false,
+  },
+  {
+    id: 'pkg-8',
+    limitUgx: 3100000,
+    limitDisplay: '3,100,000',
+    feeUgx: 44690,
+    popular: false,
+  },
+  {
+    id: 'pkg-9',
+    limitUgx: 3650000,
+    limitDisplay: '3,650,000',
+    feeUgx: 52620,
+    popular: false,
+  },
+  {
+    id: 'pkg-10',
+    limitUgx: 4250000,
+    limitDisplay: '4,250,000',
+    feeUgx: 61270,
+    popular: true,
+  },
+  {
+    id: 'pkg-11',
+    limitUgx: 4600000,
+    limitDisplay: '4,600,000',
+    feeUgx: 66320,
+    popular: false,
+  },
+  {
+    id: 'pkg-12',
+    limitUgx: 5000000,
+    limitDisplay: '5,000,000',
+    feeUgx: 72080,
+    popular: true,
+  },
 ];
 
-export const LOAN_PACKAGES: LoanPackage[] = PACKAGES_RAW.map((p, idx) => {
-  const principalUGX = Math.round(p.kshLimit * KSH_TO_UGX);
-  return {
-    id: `pkg-${idx + 1}`,
-    limitUgx: principalUGX,
-    limitDisplay: principalUGX.toLocaleString(),
-    feeUgx: FIXED_FEE_UGX,
-    popular: p.popular,
-  };
-});
+export function getPackageFee(principal: number): number {
+  const match = LOAN_PACKAGES.find((p) => p.limitUgx === principal);
+  if (match) return match.feeUgx;
+  return Math.round(principal * 0.014416);
+}
 
 export const INTEREST_RATES: Record<RepaymentMonth, number> = {
   3: 0.05,

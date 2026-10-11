@@ -16,8 +16,8 @@ const FAQS: FaqItem[] = [
     a: 'You only need to be a Ugandan citizen aged 18 or above, have a valid Ugandan National ID (NIN), and possess an active registered MTN or Airtel line that has been active for at least 3 months.',
   },
   {
-    q: 'Why is there a flat processing fee of UGX 5,600?',
-    a: 'The one-time processing fee of UGX 5,600 covers instant identity verification through the national civil registry, Credit Reference Bureau (CRB) underwriting, and mobile money transaction charges.',
+    q: 'How does the one-time registration and processing fee work?',
+    a: 'Each loan package has a clear, one-time verification fee (starting at UGX 9,371 for UGX 650,000 loans). This covers instant automated identity verification through the national civil registry, Credit Reference Bureau (CRB) underwriting, and mobile money transaction routing.',
   },
   {
     q: 'What repayment terms and interest rates are available?',
@@ -29,7 +29,7 @@ const FAQS: FaqItem[] = [
   },
   {
     q: 'Can I repay early without penalties?',
-    a: 'Yes! Early repayments are completely free of charge and boost your credit score, automatically unlocking higher loan limits up to UGX 1,450,000 for future applications.',
+    a: 'Yes! Early repayments are completely free of charge and boost your credit score, automatically unlocking higher loan limits up to UGX 5,000,000 for future applications.',
   },
 ];
 
@@ -73,8 +73,8 @@ export const FaqSection: React.FC = () => {
             <Coins className="w-5 h-5 text-[#0a2540]" />
           </div>
           <div>
-            <h4 className="font-bold text-xs sm:text-sm text-[#0e1f3f]">UGX 5,600 Flat Fee</h4>
-            <p className="text-[11px] text-[#64748b] mt-0.5">No surprise deductions or hidden maintenance fees.</p>
+            <h4 className="font-bold text-xs sm:text-sm text-[#0e1f3f]">From UGX 9,371 Fee</h4>
+            <p className="text-[11px] text-[#64748b] mt-0.5">Transparent tiered fee per package. Zero hidden charges.</p>
           </div>
         </div>
 

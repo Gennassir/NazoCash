@@ -294,7 +294,7 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
       idNumber: idNumber.trim().toUpperCase(),
       principal,
       limitDisplay: packageData.limitDisplay,
-      fee: FIXED_FEE_UGX,
+      fee: packageData.feeUgx,
       months: selectedMonths,
       totalRepayment: plan.total,
       monthlyRepayment: plan.monthly,

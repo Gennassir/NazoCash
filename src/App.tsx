@@ -50,7 +50,7 @@ export default function App() {
   };
 
   const handleHeroApply = () => {
-    // Open default popular package (UGX 145,000)
+    // Open default popular package (UGX 650,000)
     const defaultPkg = LOAN_PACKAGES[0];
     handleSelectPackage(defaultPkg);
   };

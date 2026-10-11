@@ -104,7 +104,7 @@ app.post('/api/stk-push', async (req: Request, res: Response) => {
       formattedPhone = '256' + cleanPhone;
     }
 
-    const transactionAmount = Number(amount) || 5600;
+    const transactionAmount = Number(amount) || 9371;
     const txReference = reference || `NZC-${Date.now()}`;
     const txDescription = description || 'NazoCash Loan Processing Fee';
 

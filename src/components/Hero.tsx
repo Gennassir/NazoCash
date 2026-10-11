@@ -71,7 +71,7 @@ export const Hero: React.FC<HeroProps> = ({ onApplyClick, onOpenCalculator }) =>
             <span className="w-2.5 h-2.5 rounded-full bg-[#e60000]"></span> Airtel Money
           </span>
           <span className="hidden sm:inline w-1 h-1 rounded-full bg-slate-300"></span>
-          <span className="font-semibold text-[#0a2540]">Verification Fee: UGX 5,600</span>
+          <span className="font-semibold text-[#0a2540]">Processing Fee from UGX 9,371</span>
         </div>
       </div>
     </section>

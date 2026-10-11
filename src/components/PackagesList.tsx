@@ -12,9 +12,9 @@ export const PackagesList: React.FC<PackagesListProps> = ({ packages, onSelectPa
   const [filterTier, setFilterTier] = useState<'all' | 'starter' | 'growth' | 'business'>('all');
 
   const filteredPackages = packages.filter((pkg) => {
-    if (filterTier === 'starter') return pkg.limitUgx <= 362500;
-    if (filterTier === 'growth') return pkg.limitUgx > 362500 && pkg.limitUgx <= 710500;
-    if (filterTier === 'business') return pkg.limitUgx > 710500;
+    if (filterTier === 'starter') return pkg.limitUgx <= 1400000;
+    if (filterTier === 'growth') return pkg.limitUgx > 1400000 && pkg.limitUgx <= 3100000;
+    if (filterTier === 'business') return pkg.limitUgx > 3100000;
     return true;
   });
 
@@ -26,7 +26,7 @@ export const PackagesList: React.FC<PackagesListProps> = ({ packages, onSelectPa
           Choose your loan amount
         </h2>
         <p className="text-[#64748b] text-sm sm:text-base mt-1">
-          All packages available · processing fee <span className="font-semibold text-[#0a2540]">UGX 5,600</span>
+          All packages available · processing fees from <span className="font-semibold text-[#0a2540]">UGX 9,371</span>
         </p>
       </div>
 
@@ -52,7 +52,7 @@ export const PackagesList: React.FC<PackagesListProps> = ({ packages, onSelectPa
               : 'bg-white text-[#64748b] hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          Starter (145K - 362.5K)
+          Starter (650K - 1.4M)
         </button>
         <button
           type="button"
@@ -63,7 +63,7 @@ export const PackagesList: React.FC<PackagesListProps> = ({ packages, onSelectPa
               : 'bg-white text-[#64748b] hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          Growth (464K - 710.5K)
+          Growth (1.75M - 3.1M)
         </button>
         <button
           type="button"
@@ -74,7 +74,7 @@ export const PackagesList: React.FC<PackagesListProps> = ({ packages, onSelectPa
               : 'bg-white text-[#64748b] hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          Business (855.5K - 1.45M)
+          Business (3.65M - 5M)
         </button>
       </div>
 

@@ -158,7 +158,7 @@ export const Topbar: React.FC<TopbarProps> = ({
               <Wallet className="w-4 h-4 text-emerald-600" />
               All 12 Loan Plans
             </span>
-            <span className="text-[10px] text-slate-400">From UGX 145,000</span>
+            <span className="text-[10px] text-slate-400">From UGX 650,000</span>
           </button>
         </div>
       )}

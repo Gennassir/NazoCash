@@ -47,7 +47,7 @@ export const Footer: React.FC<FooterProps> = ({ onScrollToPackages, onOpenCalcul
                   onClick={onScrollToPackages}
                   className="hover:text-[#0a2540] transition-colors"
                 >
-                  Loan Packages (UGX 145K - 1.45M)
+                  Loan Packages (UGX 650K - 5M)
                 </button>
               </li>
               <li>

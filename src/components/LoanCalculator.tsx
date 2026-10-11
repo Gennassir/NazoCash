@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RepaymentMonth, LoanPackage } from '../types';
-import { FIXED_FEE_UGX, calcRepayment, formatUGX } from '../data/packages';
+import { getPackageFee, MIN_LOAN_UGX, MAX_LOAN_UGX, calcRepayment, formatUGX } from '../data/packages';
 import { Calculator, Check, ArrowRight, ShieldCheck, Clock, Coins } from 'lucide-react';
 
 interface LoanCalculatorProps {
@@ -9,18 +9,19 @@ interface LoanCalculatorProps {
 }
 
 export const LoanCalculator: React.FC<LoanCalculatorProps> = ({ onApplyCustom, onClose }) => {
-  const [amount, setAmount] = useState<number>(580000);
+  const [amount, setAmount] = useState<number>(1100000);
   const [months, setMonths] = useState<RepaymentMonth>(3);
 
   const plan = calcRepayment(amount, months);
   const interestAmount = plan.total - amount;
+  const fee = getPackageFee(amount);
 
   const handleApply = () => {
     const customPkg: LoanPackage = {
       id: `custom-${Date.now()}`,
       limitUgx: amount,
       limitDisplay: amount.toLocaleString(),
-      feeUgx: FIXED_FEE_UGX,
+      feeUgx: fee,
       popular: true,
     };
     onApplyCustom(customPkg);
@@ -67,22 +68,22 @@ export const LoanCalculator: React.FC<LoanCalculatorProps> = ({ onApplyCustom, o
             </div>
             <input
               type="range"
-              min={100000}
-              max={1500000}
-              step={25000}
+              min={MIN_LOAN_UGX}
+              max={MAX_LOAN_UGX}
+              step={50000}
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
               className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#f5b342]"
             />
             <div className="flex justify-between text-[11px] text-[#64748b] mt-1 font-medium">
-              <span>UGX 100,000</span>
-              <span>UGX 800,000</span>
-              <span>UGX 1,500,000</span>
+              <span>UGX 650,000</span>
+              <span>UGX 2,500,000</span>
+              <span>UGX 5,000,000</span>
             </div>
 
             {/* Quick chips */}
             <div className="flex flex-wrap gap-1.5 mt-3">
-              {[145000, 290000, 580000, 855500, 1450000].map((quick) => (
+              {[650000, 1100000, 2150000, 3650000, 5000000].map((quick) => (
                 <button
                   key={quick}
                   type="button"
@@ -157,7 +158,7 @@ export const LoanCalculator: React.FC<LoanCalculatorProps> = ({ onApplyCustom, o
                   <Coins className="w-3.5 h-3.5 text-[#f5b342]" />
                   Processing Fee (one-time):
                 </span>
-                <span className="font-bold text-[#27ae60]">UGX {FIXED_FEE_UGX.toLocaleString()}</span>
+                <span className="font-bold text-[#27ae60]">UGX {fee.toLocaleString()}</span>
               </div>
             </div>
 
